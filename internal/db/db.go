@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/co-codin/go-grpc-template/internal/rocket"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -37,4 +38,16 @@ func New() (Store, error) {
 	return Store{
 		db: db,
 	}, nil
+}
+
+func (s Store) GetRocketByID(id string) (rocket.Rocket, error) {
+	return rocket.Rocket{}, nil
+}
+
+func (s Store) InsertRocket(rkt rocket.Rocket) (rocket.Rocket, error) {
+	return rocket.Rocket{}, nil
+}
+
+func (s Store) DeleteRocket(id string) error {
+	return nil
 }

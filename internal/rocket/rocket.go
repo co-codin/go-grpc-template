@@ -19,7 +19,7 @@ type Service struct {
 	Store Store
 }
 
-func NewService(store Store) Service {
+func New(store Store) Service {
 	return Service{
 		Store: store,
 	}
