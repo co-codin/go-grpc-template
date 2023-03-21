@@ -3,6 +3,7 @@ module github.com/co-codin/go-grpc-template
 go 1.19
 
 require (
+	github.com/TutorialEdge/tutorial-protos v0.0.0-20210523172951-62ac41559c58 // indirect
 	github.com/golang-migrate/migrate v3.5.4+incompatible // indirect
 	github.com/golang-migrate/migrate/v4 v4.15.2 // indirect
 	github.com/golang/mock v1.6.0 // indirect
