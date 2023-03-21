@@ -1,3 +1,5 @@
+//go:generate mockgen -destination=grpc_mocks_test.go -package=grpc github.com/TutorialEdge/go-grpc-services-course/internal/transport/grpc RocketService
+
 package grpc
 
 import (
@@ -7,7 +9,10 @@ import (
 
 	rkt "github.com/TutorialEdge/tutorial-protos/rocket/v1"
 	"github.com/co-codin/go-grpc-template/internal/rocket"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // RocketService - define the interface that the concrete implementation
@@ -48,14 +53,68 @@ func (h Handler) Serve() error {
 	return nil
 }
 
+// GetRocket - retrieves a rocket by id and returns the response.
 func (h Handler) GetRocket(ctx context.Context, req *rkt.GetRocketRequest) (*rkt.GetRocketResponse, error) {
-	return &rkt.GetRocketResponse{}, nil
+	log.Print("Get Rocket gRPC Endpoint Hit")
+
+	if _, err := uuid.Parse(req.Id); err != nil {
+		log.Print("Given UUID is not valid")
+		errorStatus := status.New(codes.InvalidArgument, "UUID is not valid")
+		details, _ := errorStatus.WithDetails()
+		return &rkt.GetRocketResponse{}, details.Err()
+	}
+
+	rocket, err := h.RocketService.GetRocketByID(ctx, req.Id)
+	if err != nil {
+		log.Print("Failed to retrieve rocket by ID")
+		return &rkt.GetRocketResponse{}, err
+	}
+
+	return &rkt.GetRocketResponse{
+		Rocket: &rkt.Rocket{
+			Id:   rocket.ID,
+			Name: rocket.Name,
+			Type: rocket.Type,
+		},
+	}, nil
 }
 
+// AddRocket - adds a rocket to the database
 func (h Handler) AddRocket(ctx context.Context, req *rkt.AddRocketRequest) (*rkt.AddRocketResponse, error) {
-	return &rkt.AddRocketResponse{}, nil
+	log.Print("Add Rocket gRPC endpoint hit")
+
+	if _, err := uuid.Parse(req.Rocket.Id); err != nil {
+		errorStatus := status.Error(codes.InvalidArgument, "UUID is not valid")
+		log.Print("Given UUID is not valid")
+		return &rkt.AddRocketResponse{}, errorStatus
+	}
+
+	newRkt, err := h.RocketService.InsertRocket(ctx, rocket.Rocket{
+		ID:   req.Rocket.Id,
+		Type: req.Rocket.Type,
+		Name: req.Rocket.Name,
+	})
+	if err != nil {
+		log.Print("failed to insert rocket into database")
+		return &rkt.AddRocketResponse{}, err
+	}
+	return &rkt.AddRocketResponse{
+		Rocket: &rkt.Rocket{
+			Id:   newRkt.ID,
+			Type: newRkt.Type,
+			Name: newRkt.Name,
+		},
+	}, nil
 }
 
+// DeleteRocket - handler for deleting a rocket
 func (h Handler) DeleteRocket(ctx context.Context, req *rkt.DeleteRocketRequest) (*rkt.DeleteRocketResponse, error) {
-	return &rkt.DeleteRocketResponse{}, nil
+	log.Print("delete rocket gRPC endpoint hit")
+	err := h.RocketService.DeleteRocket(ctx, req.Rocket.Id)
+	if err != nil {
+		return &rkt.DeleteRocketResponse{}, err
+	}
+	return &rkt.DeleteRocketResponse{
+		Status: "successfully delete rocket",
+	}, nil
 }
